@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rota da Extensão - UFPR</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    @keyframes pop-in {
+      0% { transform: scale(0); opacity: 0; }
+      50% { transform: scale(1.2); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .animate-pop-in {
+      animation: pop-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+    .hidden-screen { display: none !important; }
+    
+    /* Previne a tela de rolar no celular enquanto desenha a linha */
+    .touch-none { touch-action: none; }
+  </style>
+</head>
+<body class="antialiased relative bg-slate-900 overflow-x-hidden min-h-screen">
+
+  <div id="feedbackOverlay" class="fixed inset-0 pointer-events-none flex items-center justify-center z-50 hidden-screen bg-slate-900/40 backdrop-blur-sm">
+    <div id="feedbackCard" class="transform transition-all duration-300 ease-out scale-50 opacity-0 animate-pop-in">
+    </div>
+  </div>
+
+  <div id="screen-splash" class="screen flex min-h-screen flex-col items-center justify-center p-6 text-center text-white relative overflow-hidden">
+    <div class="w-20 h-20 bg-blue-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg rotate-3 z-10">
+      <span class="text-3xl font-black">UFPR</span>
+    </div>
+    <h1 class="text-5xl font-black mb-4 z-10">Rota da Extensão</h1>
+    <p class="text-xl text-slate-400 max-w-md mb-8 z-10">
+      Você tem uma meta de <span class="text-yellow-400 font-bold">10% de carga horária</span> para cumprir. Explore a universidade e domine as regras.
+    </p>
+    <div class="bg-white/5 border border-white/10 p-4 rounded-xl mb-10 w-full max-w-xs z-10">
+      <div class="flex justify-between text-xs mb-2 uppercase font-bold text-slate-500">
+        <span>Meta ACE</span>
+        <span>0%</span>
+      </div>
+      <div class="w-full bg-slate-800 h-3 rounded-full overflow-hidden">
+        <div class="bg-yellow-400 h-full w-[2%]"></div>
+      </div>
+    </div>
+    <button onclick="setScreen('hub')" class="bg-blue-600 hover:bg-blue-700 text-white px-10 py-4 rounded-full font-bold transition-all flex items-center gap-2 text-lg z-10 shadow-xl hover:scale-105">
+      Iniciar Jornada <i data-lucide="chevron-right"></i>
+    </button>
+  </div>
+
+  <div id="screen-hub" class="screen hidden-screen min-h-screen bg-slate-50 p-6 flex-col">
+    <div class="max-w-4xl mx-auto w-full">
+      <div class="flex justify-between items-center mb-10">
+        <div>
+          <h2 class="text-3xl font-black text-slate-900">Mapa do Território</h2>
+          <p class="text-slate-500">Escolha uma zona para explorar</p>
+        </div>
+        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
+          <p class="text-[10px] font-black text-slate-400 uppercase mb-1">Integralização</p>
+          <div class="flex items-center gap-3">
+            <span id="hubProgressText" class="text-3xl font-black text-blue-600">0%</span>
+            <div class="w-24 bg-slate-200 h-3 rounded-full overflow-hidden">
+              <div id="hubProgressBar" class="bg-blue-600 h-full transition-all duration-1000" style="width: 0%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 relative">
+        <button id="btnMissionA" onclick="startMissionA()" class="p-8 rounded-3xl border-4 transition-all text-left relative overflow-hidden group bg-white border-white hover:border-blue-400 shadow-xl hover:-translate-y-1">
+          <i data-lucide="book-open" class="text-blue-500 mb-4 w-10 h-10"></i>
+          <h3 class="text-xl font-bold mb-2">A: O Classificador</h3>
+          <p class="text-slate-500 text-sm">Domine a taxonomia: Projeto, Programa, Curso ou Evento.</p>
+          <i id="checkA" data-lucide="check-circle" class="absolute top-4 right-4 text-green-500 hidden-screen"></i>
+        </button>
+
+        <button id="btnMissionB" onclick="startMissionB()" class="p-8 rounded-3xl border-4 transition-all text-left relative overflow-hidden group bg-white border-white hover:border-blue-400 shadow-xl hover:-translate-y-1">
+          <i data-lucide="brain" class="text-purple-500 mb-4 w-10 h-10"></i>
+          <h3 class="text-xl font-bold mb-2">B: Memória de Conceitos</h3>
+          <p class="text-slate-500 text-sm">Arraste e conecte os pilares às suas definições.</p>
+          <i id="checkB" data-lucide="check-circle" class="absolute top-4 right-4 text-green-500 hidden-screen"></i>
+        </button>
+
+        <button id="btnMissionC" onclick="startMissionC()" class="p-8 rounded-3xl border-4 transition-all text-left relative overflow-hidden group bg-white border-white hover:border-blue-400 shadow-xl hover:-translate-y-1">
+          <i data-lucide="message-circle" class="text-orange-500 mb-4 w-10 h-10"></i>
+          <h3 class="text-xl font-bold mb-2">C: Quiz de Cenários</h3>
+          <p class="text-slate-500 text-sm">Tome decisões burocráticas no sistema UFPR.</p>
+          <i id="checkC" data-lucide="check-circle" class="absolute top-4 right-4 text-green-500 hidden-screen"></i>
+        </button>
+
+        <button id="btnBoss" onclick="startBoss()" disabled class="p-8 rounded-3xl border-4 transition-all text-left relative flex items-center justify-center bg-slate-200 border-slate-300 grayscale cursor-not-allowed">
+          <div class="text-center">
+            <i id="bossIconLock" data-lucide="lock" class="mx-auto mb-4 text-slate-400 w-12 h-12"></i>
+            <i id="bossIconTrophy" data-lucide="trophy" class="mx-auto mb-4 text-yellow-400 w-12 h-12 hidden-screen animate-pulse"></i>
+            <h3 class="text-xl font-bold uppercase tracking-widest">Desafio Final</h3>
+            <p id="bossSubtitle" class="text-xs opacity-60">Complete A, B e C para liberar</p>
+          </div>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="screen-missionA" class="screen hidden-screen min-h-screen bg-white flex-col items-center justify-center p-6">
+    <div class="max-w-xl w-full bg-slate-50 border border-slate-200 rounded-3xl p-10 shadow-xl text-center">
+      <div class="flex justify-between items-center mb-6">
+        <p class="text-xs font-black text-blue-500 uppercase">O Classificador</p>
+        <span id="missionACounter" class="text-xs font-bold bg-blue-100 text-blue-800 py-1 px-3 rounded-full">1/5</span>
+      </div>
+      <h2 id="missionATitle" class="text-3xl md:text-4xl font-black text-slate-900 mb-8 min-h-[100px] flex items-center justify-center">Carregando...</h2>
+      <div class="grid grid-cols-2 gap-4">
+        <button onclick="checkMissionA('Programa')" class="py-4 bg-white border-2 border-slate-200 rounded-xl font-bold text-slate-700 hover:bg-blue-600 hover:border-blue-600 hover:text-white transition-all shadow-sm">Programa</button>
+        <button onclick="checkMissionA('Projeto')" class="py-4 bg-white border-2 border-slate-200 rounded-xl font-bold text-slate-700 hover:bg-blue-600 hover:border-blue-600 hover:text-white transition-all shadow-sm">Projeto</button>
+        <button onclick="checkMissionA('Curso')" class="py-4 bg-white border-2 border-slate-200 rounded-xl font-bold text-slate-700 hover:bg-blue-600 hover:border-blue-600 hover:text-white transition-all shadow-sm">Curso</button>
+        <button onclick="checkMissionA('Evento')" class="py-4 bg-white border-2 border-slate-200 rounded-xl font-bold text-slate-700 hover:bg-blue-600 hover:border-blue-600 hover:text-white transition-all shadow-sm">Evento</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="screen-missionB" class="screen hidden-screen min-h-screen bg-slate-50 flex-col items-center justify-center p-6 relative">
+    <div class="text-center mb-10 max-w-2xl z-10">
+      <h2 class="text-3xl font-black text-slate-800 mb-2">Conecte os Conceitos</h2>
+      <p class="text-slate-500">Arraste a bolinha azul do Termo (acima) até a bolinha da sua Definição (abaixo).</p>
+    </div>
+    
+    <div id="missionBArea" class="relative w-full max-w-5xl flex flex-col gap-24 select-none z-10 touch-none">
+      
+      <svg id="linesSvg" class="absolute top-0 left-0 w-full h-full pointer-events-none overflow-visible z-0"></svg>
+      
+      <div id="missionBTopRow" class="grid grid-cols-2 md:grid-cols-4 gap-4 z-10"></div>
+      
+      <div id="missionBBottomRow" class="grid grid-cols-2 md:grid-cols-4 gap-4 z-10"></div>
+    </div>
+  </div>
+
+  <div id="screen-missionC" class="screen hidden-screen min-h-screen bg-orange-50 flex-col items-center justify-center p-6">
+    <div class="max-w-xl w-full bg-white rounded-3xl p-10 shadow-2xl relative overflow-hidden">
+      <div class="absolute top-0 right-0 p-8 opacity-5"><i data-lucide="help-circle" class="w-32 h-32 text-orange-900"></i></div>
+      <div class="relative z-10">
+        <div class="flex justify-between items-center mb-6">
+          <p class="text-xs font-black text-orange-500 uppercase">Quiz de Cenários</p>
+          <span id="missionCCounter" class="text-xs font-bold bg-orange-100 text-orange-800 py-1 px-3 rounded-full">1/2</span>
+        </div>
+        <h3 id="missionCQuestion" class="text-xl md:text-2xl font-bold mb-8 text-orange-900 leading-relaxed min-h-[120px]">Carregando...</h3>
+        <div id="missionCOptions" class="flex flex-col gap-4">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="screen-boss" class="screen hidden-screen min-h-screen flex-col items-center justify-center p-6 text-white bg-slate-900">
+    <div class="text-center w-full max-w-3xl">
+      <i data-lucide="clock" class="mx-auto mb-4 text-yellow-400 w-16 h-16"></i>
+      <h2 id="bossTimerDisplay" class="text-6xl font-black mb-8 text-white transition-colors">20s</h2>
+      <div class="bg-white/10 p-10 rounded-3xl border border-white/20 shadow-2xl backdrop-blur-sm relative overflow-hidden">
+        <div class="flex justify-between items-center mb-4 relative z-10">
+          <p class="text-yellow-400 font-bold uppercase tracking-widest text-sm">Verdadeiro ou Falso?</p>
+          <span id="bossCounter" class="text-xs font-bold bg-white/20 text-white py-1 px-3 rounded-full">1/3</span>
+        </div>
+        <h3 id="bossQuestionText" class="text-2xl md:text-3xl font-bold mb-10 leading-tight relative z-10 min-h-[100px] flex items-center justify-center">Carregando...</h3>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center relative z-10">
+          <button onclick="checkBoss(true)" class="bg-blue-600 hover:bg-blue-500 px-10 py-5 rounded-2xl font-bold text-2xl transition-all shadow-lg hover:scale-105 w-full sm:w-auto">VERDADEIRO</button>
+          <button onclick="checkBoss(false)" class="bg-red-600 hover:bg-red-500 px-10 py-5 rounded-2xl font-bold text-2xl transition-all shadow-lg hover:scale-105 w-full sm:w-auto">FALSO</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="screen-final" class="screen hidden-screen min-h-screen bg-white flex-col items-center justify-center p-6 md:p-10 relative overflow-hidden">
+    <div class="absolute top-0 left-0 w-full h-full pointer-events-none bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-yellow-50 via-white to-white z-0"></div>
+    <div class="z-10 flex flex-col items-center w-full max-w-5xl">
+      <i data-lucide="trophy" class="text-yellow-400 mb-6 w-24 h-24 md:w-32 md:h-32 animate-bounce drop-shadow-2xl"></i>
+      <h1 class="text-4xl md:text-5xl font-black text-slate-900 mb-4 text-center">Estrategista Extensionista</h1>
+      <p class="text-lg md:text-xl text-slate-500 mb-12 text-center max-w-2xl">Você dominou a arte da Curricularização da Extensão na UFPR e está pronto para gerar impacto real na sociedade.</p>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 w-full">
+        <div class="bg-slate-50 p-8 rounded-3xl border border-slate-200 shadow-sm flex flex-col h-full">
+          <h3 class="font-bold text-xl mb-2 flex items-center gap-2 text-slate-800"><i data-lucide="link-2" class="text-blue-600"></i> Links Oficiais</h3>
+          <p class="text-sm text-slate-500 mb-6">Acesse os sistemas para planejar e registrar sua ACE.</p>
+          <div class="flex flex-col gap-3 mt-auto">
+            <button onclick="window.open('https://proec.ufpr.br', '_blank')" class="flex items-center justify-between p-4 bg-white border border-slate-200 rounded-xl hover:bg-blue-50 text-blue-700 font-bold transition-colors shadow-sm">
+              Portal da Extensão PROEC <i data-lucide="external-link" class="w-5 h-5"></i>
+            </button>
+            <button onclick="window.open('https://siga.ufpr.br', '_blank')" class="flex items-center justify-between p-4 bg-white border border-slate-200 rounded-xl hover:bg-blue-50 text-blue-700 font-bold transition-colors shadow-sm">
+              Acesso ao SIGA <i data-lucide="external-link" class="w-5 h-5"></i>
+            </button>
+          </div>
+        </div>
+        
+        <div class="bg-blue-900 p-8 rounded-3xl text-white shadow-xl relative overflow-hidden flex flex-col items-center text-center">
+          <h3 class="font-bold text-xl mb-2 flex items-center gap-2 text-yellow-400"><i data-lucide="book" class="w-6 h-6"></i> Aprofunde-se</h3>
+          <p class="text-sm text-blue-200 mb-6">Acesse o Manual de Curricularização escaneando o código abaixo.</p>
+          
+          <div class="bg-white p-3 rounded-2xl shadow-lg mb-6 transform transition hover:scale-105">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://proec.ufpr.br/curricularizacao/" alt="QR Code Manual Curricularização" class="w-32 h-32 md:w-40 md:h-40 rounded-xl">
+          </div>
+          
+          <button onclick="window.location.reload()" class="mt-auto w-full bg-white text-blue-900 font-black py-4 rounded-2xl hover:bg-yellow-400 hover:text-slate-900 transition-colors uppercase tracking-widest shadow-md">
+            Jogar Novamente
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    lucide.createIcons();
+
+    let progress = 0;
+    let missions = { A: false, B: false, C: false, BossUnlocked: false };
+
+    function setScreen(screenId) {
+      document.querySelectorAll('.screen').forEach(el => el.classList.add('hidden-screen'));
+      document.querySelectorAll('.screen').forEach(el => el.classList.remove('flex'));
+      const target = document.getElementById(`screen-${screenId}`);
+      target.classList.remove('hidden-screen');
+      target.classList.add('flex');
+    }
+
+    function triggerFeedback(type, callback, customMessage = '') {
+      const overlay = document.getElementById('feedbackOverlay');
+      const card = document.getElementById('feedbackCard');
+      
+      overlay.classList.remove('hidden-screen');
+      card.classList.remove('scale-50', 'opacity-0');
+      card.classList.add('scale-100', 'opacity-100');
+
+      const messageHtml = customMessage ? `<p class="mt-4 text-sm font-medium text-center px-6 max-w-[300px] text-white/90 leading-relaxed">${customMessage}</p>` : '';
+
+      if (type === 'success') {
+        card.innerHTML = `<div class="bg-green-500 text-white rounded-[2rem] p-8 shadow-[0_0_60px_rgba(34,197,94,0.6)] flex flex-col items-center"><i data-lucide="check-circle" class="mb-3 w-16 h-16"></i><span class="font-bold text-2xl uppercase tracking-widest">Correto</span>${messageHtml}</div>`;
+      } else {
+        card.innerHTML = `<div class="bg-red-500 text-white rounded-[2rem] p-8 shadow-[0_0_60px_rgba(239,68,68,0.6)] flex flex-col items-center"><i data-lucide="x-circle" class="mb-3 w-16 h-16"></i><span class="font-bold text-2xl uppercase tracking-widest">Incorreto</span>${messageHtml}</div>`;
+      }
+      lucide.createIcons();
+
+      setTimeout(() => {
+        card.classList.remove('scale-100', 'opacity-100');
+        card.classList.add('scale-50', 'opacity-0');
+        setTimeout(() => { overlay.classList.add('hidden-screen'); if (callback) callback(); }, 300);
+      }, customMessage ? 2500 : 1000);
+    }
+
+    function updateHub() {
+      document.getElementById('hubProgressText').innerText = `${progress}%`;
+      document.getElementById('hubProgressBar').style.width = `${progress * 10}%`;
+
+      ['A', 'B', 'C'].forEach(m => {
+        if (missions[m]) {
+          let btn = document.getElementById(`btnMission${m}`);
+          btn.className = "p-8 rounded-3xl border-4 text-left relative overflow-hidden group bg-green-50 border-green-200 opacity-60";
+          btn.disabled = true;
+          document.getElementById(`check${m}`).classList.remove('hidden-screen');
+        }
+      });
+
+      if (missions.A && missions.B && missions.C) {
+        missions.BossUnlocked = true;
+        let btnBoss = document.getElementById('btnBoss');
+        btnBoss.disabled = false;
+        btnBoss.className = "p-8 rounded-3xl border-4 text-left relative flex items-center justify-center bg-slate-900 border-yellow-400 text-white shadow-2xl hover:scale-[1.02] transition-transform cursor-pointer";
+        document.getElementById('bossIconLock').classList.add('hidden-screen');
+        document.getElementById('bossIconTrophy').classList.remove('hidden-screen');
+        document.getElementById('bossSubtitle').innerText = "Liberado!";
+      }
+      setScreen('hub');
+    }
+
+    // ================= MISSÃO A =================
+    const cardsA = [
+      { id: 1, text: 'Solo na Escola', category: 'Programa', feedback: 'Correto! Programas são conjuntos de ações de longa duração.' },
+      { id: 2, text: 'RUA - Rolê Universitário', category: 'Evento', feedback: 'Isso! Ações pontuais com menos de 8h são Eventos.' },
+      { id: 3, text: 'Salvaguarda de Acervo do DECIGI', category: 'Projeto', feedback: 'Boa! Projetos têm objetivos e prazos determinados.' },
+      { id: 4, text: 'Português para Estrangeiros', category: 'Curso', feedback: 'Certo! Teve carga horária e ensino, é um Curso.' },
+      { id: 5, text: 'Festival de Inverno da UFPR', category: 'Programa', feedback: 'Atenção: Apesar de parecer evento, ele é um Programa por sua complexidade e perenidade.' }
+    ];
+    let currentTaskA = 0;
+
+    function renderMissionA() {
+      document.getElementById('missionACounter').innerText = `${currentTaskA + 1}/${cardsA.length}`;
+      document.getElementById('missionATitle').innerText = cardsA[currentTaskA].text;
+    }
+
+    function startMissionA() {
+      currentTaskA = 0; renderMissionA(); setScreen('missionA');
+    }
+
+    function checkMissionA(choice) {
+      const currentCard = cardsA[currentTaskA];
+      if (choice.toLowerCase() === currentCard.category.toLowerCase()) {
+        triggerFeedback('success', () => {
+          if (currentTaskA < cardsA.length - 1) { currentTaskA++; renderMissionA(); }
+          else { missions.A = true; progress = Math.min(progress + 3, 10); updateHub(); }
+        }, currentCard.feedback);
+      } else {
+        triggerFeedback('error', null, `Incorreto. Analise melhor a abrangência e a duração dessa ação.`);
+      }
+    }
+
+    // ================= MISSÃO B (BEZIER DRAG & DROP - CORRIGIDO) =================
+    const termsData = [
+      { id: 't1', text: 'Interação Dialógica', match: 'p1' },
+      { id: 't2', text: 'Interdisciplinaridade', match: 'p2' },
+      { id: 't3', text: 'Indissociabilidade', match: 'p3' },
+      { id: 't4', text: 'Impacto Social', match: 'p4' }
+    ];
+    const defsData = [
+      { id: 'd1', text: 'Ouvir e construir junto com a comunidade', match: 'p1' },
+      { id: 'd2', text: 'Unir diferentes áreas para um problema comum', match: 'p2' },
+      { id: 'd3', text: 'Extensão que nasce da pesquisa e vai pra aula', match: 'p3' },
+      { id: 'd4', text: 'Mudança real gerada na vida das pessoas', match: 'p4' }
+    ];
+
+    let completedPairsB = [];
+    let savedLinesB = [];
+    let isDragging = false;
+    let activeTermCard = null;
+    let activeSvgLine = null;
+
+    function startMissionB() {
+      completedPairsB = [];
+      savedLinesB = [];
+      document.getElementById('linesSvg').innerHTML = '';
+      
+      const shuffledTerms = [...termsData].sort(() => Math.random() - 0.5);
+      const shuffledDefs = [...defsData].sort(() => Math.random() - 0.5);
+      
+      const topRow = document.getElementById('missionBTopRow');
+      const botRow = document.getElementById('missionBBottomRow');
+      topRow.innerHTML = ''; botRow.innerHTML = '';
+
+      shuffledTerms.forEach(t => {
+        topRow.innerHTML += `
+          <div id="${t.id}" data-match="${t.match}" class="term-card relative p-3 md:p-4 rounded-2xl border-2 border-slate-200 bg-white text-center font-bold text-slate-700 shadow-sm flex items-center justify-center h-24 z-20 transition-colors touch-none">
+            ${t.text}
+            <div class="conn-start absolute -bottom-4 w-8 h-8 bg-blue-500 rounded-full border-4 border-slate-50 shadow-md cursor-pointer hover:scale-110 transition-transform flex items-center justify-center">
+               <div class="w-2 h-2 bg-white rounded-full pointer-events-none"></div>
+            </div>
+          </div>
+        `;
+      });
+
+      shuffledDefs.forEach(d => {
+        botRow.innerHTML += `
+          <div id="${d.id}" data-match="${d.match}" class="def-card relative p-3 md:p-4 rounded-2xl border-2 border-slate-200 bg-white text-center text-sm font-bold text-slate-700 shadow-sm flex items-center justify-center h-32 z-10 transition-colors touch-none">
+            <div class="conn-end absolute -top-4 w-8 h-8 bg-slate-200 rounded-full border-4 border-slate-50 shadow-md transition-colors"></div>
+            ${d.text}
+          </div>
+        `;
+      });
+
+      setupDragEvents();
+      setScreen('missionB');
+    }
+
+    function getCenterRelative(element) {
+      const rect = element.getBoundingClientRect();
+      const areaRect = document.getElementById('missionBArea').getBoundingClientRect();
+      return { x: rect.left + rect.width / 2 - areaRect.left, y: rect.top + rect.height / 2 - areaRect.top };
+    }
+
+    function createBezierPath(x1, y1, x2, y2) {
+      const offset = Math.abs(y2 - y1) / 1.5;
+      return `M ${x1} ${y1} C ${x1} ${y1 + offset}, ${x2} ${y2 - offset}, ${x2} ${y2}`;
+    }
+
+    function setupDragEvents() {
+      const area = document.getElementById('missionBArea');
+      const svg = document.getElementById('linesSvg');
+      const terms = document.querySelectorAll('.term-card');
+
+      terms.forEach(card => {
+        const startPoint = card.querySelector('.conn-start');
+        
+        startPoint.addEventListener('pointerdown', (e) => {
+          if (completedPairsB.includes(card.dataset.match)) return;
+          isDragging = true; activeTermCard = card;
+          activeSvgLine = document.createElementNS("http://www.w3.org/2000/svg", "path");
+          activeSvgLine.setAttribute("stroke", "#3b82f6"); activeSvgLine.setAttribute("stroke-width", "6");
+          activeSvgLine.setAttribute("fill", "none"); activeSvgLine.setAttribute("stroke-linecap", "round");
+          activeSvgLine.style.filter = "drop-shadow(0px 4px 6px rgba(0,0,0,0.1))";
+          svg.appendChild(activeSvgLine); startPoint.setPointerCapture(e.pointerId);
+        });
+
+        startPoint.addEventListener('pointermove', (e) => {
+          if (!isDragging || activeTermCard !== card) return;
+          const areaRect = area.getBoundingClientRect();
+          const startPos = getCenterRelative(startPoint);
+          const currentX = e.clientX - areaRect.left; const currentY = e.clientY - areaRect.top;
+          activeSvgLine.setAttribute("d", createBezierPath(startPos.x, startPos.y, currentX, currentY));
+        });
+
+        startPoint.addEventListener('pointerup', (e) => {
+          if (!isDragging || activeTermCard !== card) return;
+          isDragging = false; startPoint.releasePointerCapture(e.pointerId);
+          activeSvgLine.style.display = 'none';
+          const elementBellow = document.elementFromPoint(e.clientX, e.clientY);
+          activeSvgLine.style.display = 'block';
+          const droppedDefCard = elementBellow ? elementBellow.closest('.def-card') : null;
+
+          if (droppedDefCard && !completedPairsB.includes(droppedDefCard.dataset.match)) {
+            if (card.dataset.match === droppedDefCard.dataset.match) {
+              const startPos = getCenterRelative(startPoint);
+              const endPoint = droppedDefCard.querySelector('.conn-end'); const endPos = getCenterRelative(endPoint);
+              activeSvgLine.setAttribute("d", createBezierPath(startPos.x, startPos.y, endPos.x, endPos.y));
+              activeSvgLine.setAttribute("stroke", "#22c55e");
+              card.classList.replace('border-slate-200', 'border-green-500'); card.classList.add('bg-green-50', 'text-green-800');
+              startPoint.classList.replace('bg-blue-500', 'bg-green-500'); startPoint.style.cursor = 'default';
+              droppedDefCard.classList.replace('border-slate-200', 'border-green-500'); droppedDefCard.classList.add('bg-green-50', 'text-green-800');
+              endPoint.classList.replace('bg-slate-200', 'bg-green-500');
+              completedPairsB.push(card.dataset.match); savedLinesB.push({ startCard: card, endCard: droppedDefCard, line: activeSvgLine });
+              activeSvgLine = null; activeTermCard = null;
+              if (completedPairsB.length === 4) { setTimeout(() => { missions.B = true; progress = Math.min(progress + 3, 10); updateHub(); }, 800); }
+            } else {
+              // CORREÇÃO: Remove a linha temporária IMEDIATAMENTE antes de chamar o feedback
+              svg.removeChild(activeSvgLine);
+              activeSvgLine = null; activeTermCard = null;
+              // Feedback SEM callback de remoção (pois já foi removida)
+              triggerFeedback('error', null, "Este pilar não combina com esta definição!");
+            }
+          } else {
+            svg.removeChild(activeSvgLine); activeSvgLine = null; activeTermCard = null;
+          }
+        });
+      });
+    }
+
+    window.addEventListener('resize', () => {
+      if (document.getElementById('screen-missionB').classList.contains('hidden-screen')) return;
+      savedLinesB.forEach(pair => {
+        const p1 = getCenterRelative(pair.startCard.querySelector('.conn-start')); const p2 = getCenterRelative(pair.endCard.querySelector('.conn-end'));
+        pair.line.setAttribute("d", createBezierPath(p1.x, p1.y, p2.x, p2.y));
+      });
+    });
+
+    // ================= MISSÃO C =================
+    const questionsC = [
+      { q: 'Criar um evento no SIGA para a semana que vem é possível?', ops: ['Sim, o sistema aprova de forma imediata', 'Não, exige 45 dias de antecedência'], correctStr: 'Não, exige 45 dias de antecedência' },
+      { q: 'Participar como OUVINTE de uma palestra conta para os 10% de extensão?', ops: ['Sim, toda participação em palestra conta', 'Não, você deve ser da Equipe Executora'], correctStr: 'Não, você deve ser da Equipe Executora' }
+    ];
+    let currentTaskC = 0;
+
+    function renderMissionC() {
+      const qData = questionsC[currentTaskC];
+      document.getElementById('missionCCounter').innerText = `${currentTaskC + 1}/${questionsC.length}`;
+      document.getElementById('missionCQuestion').innerText = qData.q;
+      const optionsContainer = document.getElementById('missionCOptions'); optionsContainer.innerHTML = '';
+      qData.ops.forEach(opt => {
+        optionsContainer.innerHTML += `<button onclick="checkMissionC('${opt}')" class="p-5 border-2 border-orange-100 rounded-2xl bg-white hover:bg-orange-500 hover:border-orange-500 hover:text-white transition-all font-bold text-left shadow-sm text-slate-700 text-sm md:text-base">${opt}</button>`;
+      });
+    }
+
+    function startMissionC() { currentTaskC = 0; renderMissionC(); setScreen('missionC'); }
+
+    function checkMissionC(answer) {
+      const qData = questionsC[currentTaskC];
+      if (answer === qData.correctStr) {
+        triggerFeedback('success', () => {
+          if (currentTaskC < questionsC.length - 1) { currentTaskC++; renderMissionC(); }
+          else { missions.C = true; progress = Math.min(progress + 4, 10); updateHub(); }
+        }, "A burocracia existe para garantir o planejamento adequado da extensão.");
+      } else {
+        triggerFeedback('error', null, "Cuidado com as normativas da UFPR. Tente de novo.");
+      }
+    }
+
+    // ================= BOSS =================
+    const bossQuestions = [
+      { q: 'Toda extensão pública na UFPR deve ser gratuita?', correct: true },
+      { q: 'Posso validar meu estágio obrigatório como horas de extensão (ACE)?', correct: false },
+      { q: 'A extensão exige obrigatoriamente interação com a comunidade externa?', correct: true }
+    ];
+    let currentBossTask = 0, bossTime = 20, bossTimerInterval;
+
+    function renderBossQuestion() {
+      document.getElementById('bossCounter').innerText = `${currentBossTask + 1}/${bossQuestions.length}`;
+      document.getElementById('bossQuestionText').innerText = bossQuestions[currentBossTask].q;
+    }
+
+    function startBoss() {
+      currentBossTask = 0; bossTime = 20; renderBossQuestion(); updateBossTimerUI(); setScreen('boss');
+      bossTimerInterval = setInterval(() => {
+        bossTime--; updateBossTimerUI();
+        if (bossTime <= 0) { clearInterval(bossTimerInterval); triggerFeedback('error', () => { updateHub(); }, "O tempo esgotou!"); }
+      }, 1000);
+    }
+
+    function updateBossTimerUI() {
+      const display = document.getElementById('bossTimerDisplay'); display.innerText = `${bossTime}s`;
+      if (bossTime <= 5) { display.classList.add('text-red-500', 'animate-pulse'); display.classList.remove('text-white'); }
+      else { display.classList.remove('text-red-500', 'animate-pulse'); display.classList.add('text-white'); }
+    }
+
+    function checkBoss(userAnswer) {
+      if (userAnswer === bossQuestions[currentBossTask].correct) {
+        triggerFeedback('success', () => { if (currentBossTask < bossQuestions.length - 1) { currentBossTask++; renderBossQuestion(); } else { clearInterval(bossTimerInterval); setScreen('final'); } });
+      } else {
+        bossTime = Math.max(0, bossTime - 5); updateBossTimerUI(); triggerFeedback('error', null, "-5 Segundos de penalidade!");
+      }
+    }
+  </script>
+</body>
+</html>
